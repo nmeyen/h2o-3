@@ -2822,4 +2822,6 @@ def cannaryHDFSTest(hdfs_name_node, file_name):
             return False
 
 
-
+def assert_is_type(expected_return_type, actual_return_type):
+    assert expected_return_type==actual_return_type, "Expected return type should be {0} but received as " \
+                                                     "{1}".format(expected_return_type, actual_return_type)
