@@ -41,7 +41,9 @@ class H2OKMeansEstimator(H2OEstimator):
 
     @property
     def training_frame(self):
-        """str: Id of the training data frame (Not required, to allow initial validation of model parameters)."""
+        """
+        H2OFrame: Id of the training data frame (Not required, to allow initial validation of model parameters).
+        """
         return self._parms.get("training_frame")
 
     @training_frame.setter
@@ -52,7 +54,7 @@ class H2OKMeansEstimator(H2OEstimator):
 
     @property
     def validation_frame(self):
-        """str: Id of the validation data frame."""
+        """H2OFrame: Id of the validation data frame."""
         return self._parms.get("validation_frame")
 
     @validation_frame.setter
@@ -182,7 +184,11 @@ class H2OKMeansEstimator(H2OEstimator):
 
     @property
     def user_points(self):
-        """str: User-specified points"""
+        """
+        H2OFrame: This option allows you to specify a dataframe, where each row represents an initial cluster center.
+        The user-specified points must have the same number of columns as the training observations. The number of rows
+        must equal the number of clusters
+        """
         return self._parms.get("user_points")
 
     @user_points.setter
