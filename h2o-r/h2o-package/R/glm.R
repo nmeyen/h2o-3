@@ -72,6 +72,7 @@
 #' @param remove_collinear_columns (Optional)  Logical, valid only with no regularization. If set, co-linear columns will be automatically ignored (coefficient will be 0).
 #' @param missing_values_handling (Optional) Controls handling of missing values. Can be either "MeanImputation" or "Skip". MeanImputation replaces missing values with mean for numeric and most frequent level for categorical,  Skip ignores observations with any missing value. Applied both during model training *AND* scoring.
 #' @param max_runtime_secs Maximum allowed runtime in seconds for model training. Use 0 to disable.
+#' @param ... Pass through args.
 #'
 #' @return A subclass of \code{\linkS4class{H2OModel}} is returned. The specific subclass depends on the machine learning task at hand
 #'         (if it's binomial classification, then an \code{\linkS4class{H2OBinomialModel}} is returned, if it's regression then a
@@ -118,7 +119,7 @@ h2o.glm <- function(x, y, training_frame, model_id,
                     ignore_const_cols = TRUE,
                     max_iterations = 50,
                     beta_epsilon = 0,
-                    solver = c("IRLSM", "L_BFGS"),
+                    solver = c("AUTO", "IRLSM", "L_BFGS", "COORDINATE_DESCENT_NAIVE", "COORDINATE_DESCENT"),
                     standardize = TRUE,
                     family = c("gaussian", "binomial", "poisson", "gamma", "tweedie","multinomial","quasibinomial"),
                     link = c("family_default", "identity", "logit", "log", "inverse", "tweedie"),
@@ -149,7 +150,7 @@ h2o.glm <- function(x, y, training_frame, model_id,
                     compute_p_values = FALSE,
                     remove_collinear_columns = FALSE,
                     max_runtime_secs = 0,
-                    missing_values_handling = c("MeanImputation","Skip"))
+                    missing_values_handling = c("MeanImputation","Skip"), ...)
 {
   #If x is missing, then assume user wants to use all columns as features.
   if(missing(x)){
