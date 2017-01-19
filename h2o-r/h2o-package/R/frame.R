@@ -1155,21 +1155,37 @@ NULL
 
   # This function is called with a huge variety of argument styles
   # Here's the breakdown:
-  #   Style          Type #args  Description
-  # df[]           - na na 2    both missing, identity with df
-  # df["colname"]  - c  na 2    single column by name, df$colname
-  # df[3]          - X  na 2    if ncol > 1 then column else row
-  # df[,]          - na na 3    both missing, identity with df
-  # df[2,]         - r  na 3    constant row, all cols
-  # df[1:150,]     - r  na 3    selection of rows, all cols
-  # df[,3]         - na c  3    constant column
-  # df[,1:10]      - na c  3    selection of columns
-  # df[,"colname"] - na c  3    single column by name
-  # df[2,"colname"]- r  c  3    row slice and column-by-name
-  # df[2,3]        - r  c  3    single element
-  # df[1:150,1:10] - r  c  3    rectangular slice
-  # df[a<b,]       - f  na 3    boolean row slice
-  # df[a<b,c]      - f  c  3    boolean row slice
+  #   Style          Type  #args  Description
+  # df[]             - na na 2    both missing, identity with df
+  # df["colname"]    - c  na 2    single column by name, df$colname
+  # df[3]            - X  na 2    if ncol > 1 then column else row
+  # df[,]            - na na 3    both missing, identity with df
+  # df[2,]           - r  na 3    constant row, all cols
+  # df[1:150,]       - r  na 3    selection of rows, all cols
+  # df[,3]           - na c  3    constant column
+  # df[,1:10]        - na c  3    selection of columns
+  # df[,"colname"]   - na c  3    single column by name
+  # df[2,"colname"]  - r  c  3    row slice and column-by-name
+  # df[2,3]          - r  c  3    single element
+  # df[1:150,1:10]   - r  c  3    rectangular slice
+  # df[a<b,]         - f  na 3    boolean row slice
+  # df[a<b,c]        - f  c  3    boolean row slice
+  # df[1,-1]         - r  c  3    selection of first row minus the first column
+  # df[-1,-1]        - r  c  3    get rid of first row and first column
+  # df[-1,1]         - r  c  3    get rid of first row and keep first column
+  # df[-1:-20,-1:-3] - r  c  3    get rid of first 20 rows and first 3 columns
+  # df[-1:-20,1:3]   - r  c  3    get rid of first 20 rows and keep first 3 columns
+  # df[1:20,-1:-3]   - r  c  3    keep first 20 rows and remove first 3 columns
+
+  # Have a row & column selector with negative col or negative row indexes?
+  if(!missing(col) && !missing(row) && !is.H2OFrame(row) && !is.H2OFrame(col) && (col < 0 || row < 0)){
+    idx <- .row.col.selector(col,envir=parent.frame())
+    data <- .newExpr("cols",data,idx) # Column selector
+    row <- .row.col.selector(substitute(row), row,envir=parent.frame())
+    data <- .newExpr("rows",data,row) # Row selector
+    return(data) #Need to return here. Passing it down would add more evalutions which change the desired frame.
+  }
+
   is1by1 <- !missing(col) && !missing(row) && !is.H2OFrame(row) && length(col) == 1 && length(row) == 1
   if( nargs() == 2 &&   # Only row, no column; nargs==2 distinguishes "df[2,]" (row==2) from "df[2]" (col==2)
       # is.char tells cars["cylinders"], or if there are multiple columns.
@@ -1179,7 +1195,9 @@ NULL
     col <- row
     row <- NA
   }
-  if( !missing(col) ) {     # Have a column selector?
+
+  # Have a column selector?
+  if( !missing(col) ) {
     if( is.logical(col) ) { # Columns by boolean choice
       col <- which(col)     # Pick out all the TRUE columns by index
     } else if (base::is.character(col)) {
@@ -1192,12 +1210,14 @@ NULL
     idx <- .row.col.selector(col,envir=parent.frame()) # Generic R expression
     data <- .newExpr("cols",data,idx) # Column selector
   }
+
   # Have a row selector?
   if( !missing(row) && (is.H2OFrame(row) || !is.na(row)) ) {
     if( !is.H2OFrame(row) )    # Generic R expression
       row <- .row.col.selector(substitute(row), row,envir=parent.frame())
     data <- .newExpr("rows",data,row) # Row selector
   }
+
   if( is1by1 ) .fetch.data(data,1L)[[1]]
   else         data
 }
